@@ -220,6 +220,8 @@
                                     <label class="block text-[10px] text-slate-400 mb-1">หน่วยนับอ้างอิง</label>
                                     <select id="new-ing-unit" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-2 text-slate-300 focus:outline-none">
                                         <option value="กรัม">กรัม (grams)</option>
+                                        <option value="ช้อนโต๊ะ">ช้อนโต๊ะ (tbsp)</option>
+                                        <option value="ช้อนชา">ช้อนชา (tsp)</option>
                                         <option value="ฟอง">ฟอง (egg unit)</option>
                                         <option value="ชิ้น">ชิ้น (pieces)</option>
                                         <option value="กล่อง">กล่อง (box)</option>
@@ -230,7 +232,7 @@
                                     <label class="block text-[10px] text-slate-400 mb-1">ปริมาณอ้างอิงของสัดส่วน</label>
                                     <div class="flex items-center gap-2">
                                         <input type="number" id="new-ing-base" value="100" min="1" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-2 text-center text-emerald-400 font-bold focus:outline-none">
-                                        <span class="text-xs text-slate-500 shrink-0">ต่อ 1 หน่วยวัดหลัก</span>
+                                        <span class="text-xs text-slate-500 shrink-0">ต่อหน่วยอ้างอิง</span>
                                     </div>
                                 </div>
                             </div>
@@ -402,6 +404,22 @@
 
                 <div class="space-y-3" id="logged-meals-container">
                     <!-- Daily meals logged appear here -->
+                </div>
+            </div>
+
+            <!-- New Aggregated Ingredients Summary Card (For copying to paper notebook) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4 mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-list text-indigo-400"></i>
+                            สรุปส่วนประกอบวัตถุดิบแยกประเภท (รวมสำหรับจดลงสมุด) 📋
+                        </h2>
+                        <p class="text-[11px] text-slate-400 mt-1">สรุปรวมน้ำหนักและหน่วยวัดของวัตถุดิบทั้งหมดของวันนี้แยกตามชนิดอย่างชัดเจน สะดวกสำหรับคุณปอนด์ใช้อ่านจดลงสมุดบันทึกต่อครับ</p>
+                    </div>
+                </div>
+                <div id="daily-ingredients-summary-container">
+                    <!-- Consolidated daily ingredients summary dynamically injected here -->
                 </div>
             </div>
 
@@ -591,6 +609,21 @@
             renderLogsList();
             renderCustomStockChips();
             updateDashboard();
+
+            // Automatic base input adjustment based on registered units
+            document.getElementById('new-ing-unit').onchange = function() {
+                const unit = this.value;
+                const baseInput = document.getElementById('new-ing-base');
+                if (unit === 'ช้อนโต๊ะ') {
+                    baseInput.value = '15';
+                } else if (unit === 'ช้อนชา') {
+                    baseInput.value = '5';
+                } else if (unit === 'ฟอง' || unit === 'ชิ้น') {
+                    baseInput.value = '1';
+                } else if (unit === 'กรัม') {
+                    baseInput.value = '100';
+                }
+            };
         };
 
         // Handles switching between Detailed and Quick Calorie input panels
@@ -617,21 +650,35 @@
         // Converts the input weight based on unit selection to equivalent base grams for macro calculation
         function calculateWeightedMacros(ing, weightAmount, unit) {
             const db = getIngredientDb();
-            const base = db[ing.baseId];
+            let base = db[ing.baseId];
+
+            // If it is a manual blank row ingredient, resolve fallback scaling multipliers
+            if (!base && ing.baseId === 'custom') {
+                base = {
+                    kcal: ing.baseKcal || 0,
+                    protein: ing.baseProtein || 0,
+                    carbs: ing.baseCarbs || 0,
+                    fat: ing.baseFat || 0,
+                    baseWeight: 100
+                };
+            }
+
             if (!base) return;
 
             let equivalentGrams = weightAmount;
 
-            // Apply unit multiplier factors
+            // Apply standard cooking weight conversion factors
             if (unit === 'ช้อนโต๊ะ') {
                 equivalentGrams = weightAmount * 15; // 1 tbsp roughly equals 15g
             } else if (unit === 'ช้อนชา') {
                 equivalentGrams = weightAmount * 5;  // 1 tsp roughly equals 5g
             } else if (unit === 'ฟอง/ชิ้น' || unit === 'หน่วย') {
-                equivalentGrams = weightAmount * (base.baseWeight || 1);
+                equivalentGrams = weightAmount * (base.baseWeight || 50);
+            } else if (unit === 'กรัม' || unit === 'g') {
+                equivalentGrams = weightAmount;
             }
 
-            const ratio = equivalentGrams / base.baseWeight;
+            const ratio = equivalentGrams / (base.baseWeight || 100);
             ing.weight = weightAmount;
             ing.unit = unit;
             ing.kcal = Math.round(base.kcal * ratio);
@@ -737,6 +784,10 @@
                     // Pre-select matching unit in dropdown if it exists
                     if (unit.includes("ฟอง") || unit.includes("ชิ้น") || unit.includes("หน่วย") || unit.includes("ฟอง/ชิ้น")) {
                         unitSelect.value = "ฟอง/ชิ้น";
+                    } else if (unit.includes("ช้อนโต๊ะ")) {
+                        unitSelect.value = "ช้อนโต๊ะ";
+                    } else if (unit.includes("ช้อนชา")) {
+                        unitSelect.value = "ช้อนชา";
                     } else {
                         unitSelect.value = "กรัม";
                     }
@@ -894,12 +945,16 @@
             appState.currentIngredients.push({
                 name: "วัตถุดิบเสริมเพิ่มเอง",
                 baseId: "custom",
-                weight: 100,
-                unit: "กรัม",
+                weight: 1,
+                unit: "ช้อนโต๊ะ",
                 kcal: 0,
                 protein: 0,
                 carbs: 0,
-                fat: 0
+                fat: 0,
+                kcalPerGram: 0,
+                proteinPerGram: 0,
+                carbsPerGram: 0,
+                fatPerGram: 0
             });
             renderActiveWorkspace();
         }
@@ -999,13 +1054,33 @@
             renderActiveWorkspace();
         }
 
-        // Custom individual workspace fields editing
+        // Custom individual workspace fields editing with automated base weight ratios for standard scaling
         function updateWorkspaceField(index, field, val) {
             const ing = appState.currentIngredients[index];
             if (field === 'name') {
                 ing.name = val;
             } else {
                 ing[field] = parseFloat(val) || 0;
+
+                // Sync custom ingredient manual factors for seamless subsequent weight scaling
+                if (ing.baseId === 'custom') {
+                    let currentGrams = ing.weight;
+                    if (ing.unit === 'ช้อนโต๊ะ') currentGrams = ing.weight * 15;
+                    else if (ing.unit === 'ช้อนชา') currentGrams = ing.weight * 5;
+                    else if (ing.unit === 'ฟอง/ชิ้น') currentGrams = ing.weight * 50;
+                    
+                    const safeGrams = currentGrams || 1;
+                    ing.kcalPerGram = ing.kcal / safeGrams;
+                    ing.proteinPerGram = ing.protein / safeGrams;
+                    ing.carbsPerGram = ing.carbs / safeGrams;
+                    ing.fatPerGram = ing.fat / safeGrams;
+                    
+                    // Backup values to emulate RAW_INGREDIENT database structures
+                    ing.baseKcal = ing.kcalPerGram * 100;
+                    ing.baseProtein = ing.proteinPerGram * 100;
+                    ing.baseCarbs = ing.carbsPerGram * 100;
+                    ing.baseFat = ing.fatPerGram * 100;
+                }
             }
             calculateBuilderTotals();
         }
@@ -1110,7 +1185,7 @@
                 totalF: fat,
                 date: activeSelectedDate,
                 ingredients: [
-                    { name: "บันทึกแคลด่วน (กะโดยประมาณ)", baseId: "custom", weight: kcal, unit: "kcal", kcal: kcal, protein: protein, carbs: carbs, fat: fat }
+                    { name: name + " (บันทึกแคลด่วน)", baseId: "custom", weight: kcal, unit: "kcal", kcal: kcal, protein: protein, carbs: carbs, fat: fat }
                 ]
             };
 
@@ -1142,6 +1217,7 @@
                         ยังไม่มีรายการทานบันทึกไว้ในวันที่เลือกค่ะคุณปอนด์
                     </div>
                 `;
+                renderDailyIngredientsSummary();
                 return;
             }
 
@@ -1194,6 +1270,139 @@
                 `;
                 container.appendChild(card);
             });
+
+            // Refresh consolidated ingredient summary list
+            renderDailyIngredientsSummary();
+        }
+
+        // Compiles all ingredients consumed on activeSelectedDate, merges weights of matching types, and displays a clean list
+        function renderDailyIngredientsSummary() {
+            const container = document.getElementById('daily-ingredients-summary-container');
+            if (!container) return;
+
+            const dailyLogs = appState.logs.filter(log => log.date === activeSelectedDate);
+            if (dailyLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl bg-slate-950/20">
+                        ไม่มีประวัติวัตถุดิบรวมให้สรุปสำหรับวันนี้ค่ะ
+                    </div>
+                `;
+                return;
+            }
+
+            // Object map to store combined values. Key format: "IngredientName|Unit"
+            const summary = {};
+
+            dailyLogs.forEach(log => {
+                if (log.ingredients && log.ingredients.length > 0) {
+                    log.ingredients.forEach(ing => {
+                        const name = ing.name.trim();
+                        const unit = ing.unit || "กรัม";
+                        const key = `${name}|${unit}`;
+
+                        if (!summary[key]) {
+                            summary[key] = {
+                                name: name,
+                                unit: unit,
+                                totalWeight: 0,
+                                totalKcal: 0,
+                                totalP: 0,
+                                totalC: 0,
+                                totalF: 0
+                            };
+                        }
+
+                        summary[key].totalWeight += parseFloat(ing.weight) || 0;
+                        summary[key].totalKcal += parseFloat(ing.kcal) || 0;
+                        summary[key].totalP += parseFloat(ing.protein) || 0;
+                        summary[key].totalC += parseFloat(ing.carbs) || 0;
+                        summary[key].totalF += parseFloat(ing.fat) || 0;
+                    });
+                }
+            });
+
+            const keys = Object.keys(summary);
+            if (keys.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl bg-slate-950/20">
+                        ไม่มีวัตถุดิบย่อยให้สรุปรายงาน (มีเฉพาะแคลด่วนรวม)
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="space-y-2">';
+            let plainTextToCopy = `📝 สรุปบันทึกวัตถุดิบรวมรายวัน (${activeSelectedDate})\n----------------------------------\n`;
+
+            keys.forEach(key => {
+                const item = summary[key];
+                const p = Math.round(item.totalP * 10) / 10;
+                const c = Math.round(item.totalC * 10) / 10;
+                const f = Math.round(item.totalF * 10) / 10;
+                const weightFormatted = Math.round(item.totalWeight * 10) / 10;
+
+                html += `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-950 border border-slate-800/50 rounded-xl hover:border-slate-700 transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/20 shrink-0"></div>
+                            <div>
+                                <span class="font-bold text-xs text-white block sm:inline-block">${item.name}</span>
+                                <span class="text-[10px] text-slate-400 font-semibold bg-slate-900 border border-slate-800 px-2 py-0.5 rounded sm:ml-2 mt-1 sm:mt-0 inline-block">
+                                    รวม: ${weightFormatted} ${item.unit}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs shrink-0 self-end sm:self-auto pt-1 sm:pt-0">
+                            <span class="text-emerald-400 font-bold">${Math.round(item.totalKcal)} kcal</span>
+                            <span class="text-slate-700">|</span>
+                            <span class="text-slate-400 text-[11px] font-medium">P: <span class="text-rose-400">${p}g</span> C: <span class="text-amber-400">${c}g</span> F: <span class="text-blue-400">${f}g</span></span>
+                        </div>
+                    </div>
+                `;
+
+                plainTextToCopy += `- ${item.name}: ${weightFormatted} ${item.unit} (${Math.round(item.totalKcal)} kcal | โปรตีน:${p}g คาร์บ:${c}g ไขมัน:${f}g)\n`;
+            });
+
+            // Calculate overall day nutrients for notebook context
+            let dayTotalKcal = 0;
+            let dayTotalP = 0;
+            let dayTotalC = 0;
+            let dayTotalF = 0;
+            dailyLogs.forEach(l => {
+                dayTotalKcal += l.totalKcal || 0;
+                dayTotalP += l.totalP || 0;
+                dayTotalC += l.totalC || 0;
+                dayTotalF += l.totalF || 0;
+            });
+
+            plainTextToCopy += `----------------------------------\n📊 พลังงานรวมทั้งวัน: ${dayTotalKcal} kcal (P: ${Math.round(dayTotalP*10)/10}g, C: ${Math.round(dayTotalC*10)/10}g, F: ${Math.round(dayTotalF*10)/10}g)\nบันทึกด้วยแอป Pond Calorie Pro`;
+
+            html += `
+                </div>
+                <div class="mt-4 pt-1 flex justify-end">
+                    <button onclick="copyIngredientsSummary(\`${plainTextToCopy.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl py-2.5 px-4 text-xs font-bold transition-all border border-slate-700 flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-regular fa-copy text-indigo-400"></i> คัดลอกสรุปทั้งหมดไปจดบันทึก
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Copies consolidated ingredients list to system clipboard safely inside iframe environment
+        function copyIngredientsSummary(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed'; // prevent scrolling
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("คัดลอกสรุปวัตถุดิบทั้งหมดแล้ว! นำไปบันทึกหรือส่งข้อความต่อได้เลยค่ะคุณปอนด์");
+            } catch (err) {
+                showToast("ไม่สามารถคัดลอกได้อัตโนมัติ กรุณาลองเลือกคัดลอกด้วยตนเองนะคะ", "warning");
+            }
+            document.body.removeChild(textarea);
         }
 
         // Trigger individual meal removal confirmation
@@ -1359,6 +1568,20 @@
                 ing.name = val;
             } else {
                 ing[field] = parseFloat(val) || 0;
+
+                // Sync custom ingredient manual factors inside modal edits
+                if (ing.baseId === 'custom') {
+                    let currentGrams = ing.weight;
+                    if (ing.unit === 'ช้อนโต๊ะ') currentGrams = ing.weight * 15;
+                    else if (ing.unit === 'ช้อนชา') currentGrams = ing.weight * 5;
+                    else if (ing.unit === 'ฟอง/ชิ้น') currentGrams = ing.weight * 50;
+                    
+                    const safeGrams = currentGrams || 1;
+                    ing.kcalPerGram = ing.kcal / safeGrams;
+                    ing.proteinPerGram = ing.protein / safeGrams;
+                    ing.carbsPerGram = ing.carbs / safeGrams;
+                    ing.fatPerGram = ing.fat / safeGrams;
+                }
             }
             calculateModalTotals();
         }
@@ -1367,12 +1590,16 @@
             modalIngredients.push({
                 name: "วัตถุดิบเสริมสัดส่วน",
                 baseId: "custom",
-                weight: 100,
-                unit: "กรัม",
+                weight: 1,
+                unit: "ช้อนโต๊ะ",
                 kcal: 0,
                 protein: 0,
                 carbs: 0,
-                fat: 0
+                fat: 0,
+                kcalPerGram: 0,
+                proteinPerGram: 0,
+                carbsPerGram: 0,
+                fatPerGram: 0
             });
             renderModalIngredients();
         }
