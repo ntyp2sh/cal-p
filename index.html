@@ -116,7 +116,7 @@
                     <div>
                         <div class="flex justify-between text-xs font-semibold mb-1">
                             <span class="text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-egg"></i> โปรตีน (Protein)</span>
-                            <span class="text-slate-300" id="protein-progress-text">0g / 130g</span>
+                            <span class="text-slate-300" id="protein-progress-text">0g / 80g</span>
                         </div>
                         <div class="h-2.5 bg-slate-950 rounded-full overflow-hidden">
                             <div id="protein-bar" class="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -127,7 +127,7 @@
                     <div>
                         <div class="flex justify-between text-xs font-semibold mb-1">
                             <span class="text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-wheat-awn"></i> คาร์บ (Carbs)</span>
-                            <span class="text-slate-300" id="carbs-progress-text">0g / 240g</span>
+                            <span class="text-slate-300" id="carbs-progress-text">0g / 180g</span>
                         </div>
                         <div class="h-2.5 bg-slate-950 rounded-full overflow-hidden">
                             <div id="carbs-bar" class="h-full bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -138,7 +138,7 @@
                     <div>
                         <div class="flex justify-between text-xs font-semibold mb-1">
                             <span class="text-blue-400 flex items-center gap-1.5"><i class="fa-solid fa-droplet"></i> ไขมัน (Fat)</span>
-                            <span class="text-slate-300" id="fat-progress-text">0g / 60g</span>
+                            <span class="text-slate-300" id="fat-progress-text">0g / 50g</span>
                         </div>
                         <div class="h-2.5 bg-slate-950 rounded-full overflow-hidden">
                             <div id="fat-bar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -148,7 +148,7 @@
             </div>
             
             <div class="text-xs text-slate-500 text-center">
-                <i class="fa-solid fa-info-circle mr-1"></i> ข้อมูลบันทึกประวัติจะถูกเซฟแยกวันให้คุณปอนออโต้
+                <i class="fa-solid fa-info-circle mr-1"></i> ข้อมูลบันทึกประวัติจะถูกเซฟแยกวันให้คุณปอนด์ออโต้
             </div>
         </section>
 
@@ -285,7 +285,7 @@
                     <div class="flex justify-between items-center mb-3">
                         <div>
                             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-list-check text-indigo-400 mr-1.5"></i> ตารางส่วนผสมวัตถุดิบ (ปรับแต่งแก้ไขได้ตามจริง)</h3>
-                            <p class="text-[10px] text-slate-500 mt-0.5">คุณปอนปรับแก้ไขปริมาณ แคลอรี่ หรือเปลี่ยนชนิดวัตถุดิบได้ทุกฟิลด์ครับ</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">คุณปอนด์ปรับแก้ไขปริมาณ แคลอรี่ หรือเปลี่ยนชนิดวัตถุดิบได้ทุกฟิลด์ครับ</p>
                         </div>
                         <button type="button" onclick="addBlankIngredientRow()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 py-1 px-2.5 rounded-lg transition-all font-semibold flex items-center gap-1">
                             <i class="fa-solid fa-plus text-[10px]"></i> เพิ่มวัตถุดิบเปล่า
@@ -415,7 +415,7 @@
             </div>
             
             <p id="confirm-modal-body" class="text-xs text-slate-300 leading-relaxed">
-                การลบประวัติหรือล้างข้อมูลนี้จะไม่สามารถย้อนกลับมาได้ คุณปอนแน่ใจแล้วใช่ไหมครับ?
+                การลบประวัติหรือล้างข้อมูลนี้จะไม่สามารถย้อนกลับมาได้ คุณปอนด์แน่ใจแล้วใช่ไหมครับ?
             </p>
 
             <div class="flex gap-2 justify-end mt-2">
@@ -613,8 +613,8 @@
                 const opt = document.createElement('option');
                 opt.value = key;
                 // Add a prefix flag icon if it is a personal customized stock item
-                const prefix = appState.customRawIngredients && appState.customRawIngredients[key] ? '⭐ [คลังคุณปอน] ' : '';
-                opt.innerText = `${prefix}${ing.name} (${ing.kcal} kcal ต่อ ${ing.baseWeight}${ing.unit})`;
+                const prefix = appState.customRawIngredients && appState.customRawIngredients[key] ? '⭐ [คลังคุณปอนด์] ' : '';
+                opt.innerText = `${prefix}${ing.name} (${ing.kcal} kcal ต่อ ${ing.baseWeight} ${ing.unit})`;
                 dropdown.appendChild(opt);
             });
 
@@ -651,6 +651,796 @@
         function saveNewCustomRawIngredient() {
             const name = document.getElementById('new-ing-name').value.trim();
             const unit = document.getElementById('new-ing-unit').value;
-            const baseWeight = parseFloat(document.getElementById('new-ing-base').value);
+            const baseWeight = parseFloat(document.getElementById('new-ing-base').value) || 100;
             const kcal = Math.round(parseFloat(document.getElementById('new-ing-kcal').value)) || 0;
-            const protein = parseFloat(document.getElementById('new-ing-protein').value)
+            const protein = parseFloat(document.getElementById('new-ing-protein').value) || 0;
+            const carbs = parseFloat(document.getElementById('new-ing-carbs').value) || 0;
+            const fat = parseFloat(document.getElementById('new-ing-fat').value) || 0;
+
+            if (!name) {
+                showToast("กรุณาระบุชื่อวัตถุดิบด้วยค่ะคุณปอนด์", "warning");
+                return;
+            }
+
+            const customId = 'custom_' + Date.now();
+            if (!appState.customRawIngredients) appState.customRawIngredients = {};
+            
+            appState.customRawIngredients[customId] = {
+                name: name,
+                unit: unit,
+                kcal: kcal,
+                protein: protein,
+                carbs: carbs,
+                fat: fat,
+                baseWeight: baseWeight
+            };
+
+            saveState();
+            renderRawIngredientsDropdown();
+            renderCustomStockChips();
+            toggleCustomIngredientForm();
+            
+            // Reset inputs
+            document.getElementById('new-ing-name').value = '';
+            document.getElementById('new-ing-base').value = '100';
+            document.getElementById('new-ing-kcal').value = '0';
+            document.getElementById('new-ing-protein').value = '0';
+            document.getElementById('new-ing-carbs').value = '0';
+            document.getElementById('new-ing-fat').value = '0';
+
+            showToast("เพิ่มวัตถุดิบใหม่เข้าคลังถาวรเรียบร้อยแล้วค่ะ!");
+        }
+
+        // Returns unit string for ingredient
+        function getUnitForIngredient(baseId) {
+            if (!baseId || baseId === "custom") return "กรัม";
+            const db = getIngredientDb();
+            return db[baseId] ? db[baseId].unit : "กรัม";
+        }
+
+        // Renders Preset Food Selection Menu Pills
+        function renderPresets() {
+            const container = document.getElementById('presets-container');
+            container.innerHTML = '';
+            Object.keys(PRESETS).forEach(key => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-full transition-all border border-slate-700/50 hover:border-slate-500';
+                btn.innerText = PRESETS[key].name;
+                btn.onclick = () => {
+                    document.getElementById('food-input-name').value = PRESETS[key].name;
+                    loadPresetIngredients(key);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Loads selected preset dish ingredients to active builder workspace
+        function loadPresetIngredients(presetKey) {
+            let key = presetKey;
+            if (!key) {
+                const typedName = document.getElementById('food-input-name').value.trim();
+                const matchedKey = Object.keys(PRESETS).find(k => k === typedName || PRESETS[k].name.includes(typedName));
+                if (matchedKey) {
+                    key = matchedKey;
+                } else {
+                    showToast("ไม่พบสูตรสำเร็จรูปนี้ ลองเลือกจากเมนูด้านล่างหรือเพิ่มส่วนผสมเองทางขวานะคะคุณปอนด์", "info");
+                    return;
+                }
+            }
+
+            const preset = PRESETS[key];
+            if (preset) {
+                appState.currentIngredients = preset.ingredients.map(ing => ({
+                    name: ing.name,
+                    baseId: ing.baseId,
+                    weight: ing.weight,
+                    kcal: ing.kcal,
+                    protein: ing.protein,
+                    carbs: ing.carbs,
+                    fat: ing.fat
+                }));
+                renderActiveWorkspace();
+                showToast(`แยกวัตถุดิบของ "${preset.name}" เรียบร้อยแล้วค่ะ!`);
+            }
+        }
+
+        // Appends quick finder raw item into builder workspace plate
+        function addRawIngredientToWorkspace() {
+            const select = document.getElementById('raw-ingredient-select');
+            const weightInput = document.getElementById('raw-ingredient-weight');
+            const key = select.value;
+            const weight = parseFloat(weightInput.value) || 100;
+
+            if (!key) {
+                showToast("กรุณาเลือกชื่อวัตถุดิบที่ต้องการเพิ่มก่อนนะคะ", "warning");
+                return;
+            }
+
+            const db = getIngredientDb();
+            const base = db[key];
+            if (base) {
+                const ratio = weight / base.baseWeight;
+                const newIng = {
+                    name: base.name,
+                    baseId: key,
+                    weight: weight,
+                    kcal: Math.round(base.kcal * ratio),
+                    protein: Math.round((base.protein * ratio) * 10) / 10,
+                    carbs: Math.round((base.carbs * ratio) * 10) / 10,
+                    fat: Math.round((base.fat * ratio) * 10) / 10
+                };
+
+                appState.currentIngredients.push(newIng);
+                renderActiveWorkspace();
+                showToast(`เพิ่มวัตถุดิบ "${base.name}" แล้วค่ะ!`);
+                
+                // Clear picker fields
+                select.value = "";
+                weightInput.value = "100";
+                document.getElementById('raw-ingredient-unit-label').innerText = "กรัม";
+            }
+        }
+
+        // Appends a blank customizable item to workspace list
+        function addBlankIngredientRow() {
+            appState.currentIngredients.push({
+                name: "วัตถุดิบเสริมเพิ่มเอง",
+                baseId: "custom",
+                weight: 100,
+                kcal: 0,
+                protein: 0,
+                carbs: 0,
+                fat: 0
+            });
+            renderActiveWorkspace();
+        }
+
+        // Renders active builder table list interface
+        function renderActiveWorkspace() {
+            const container = document.getElementById('ingredients-editor-list');
+            if (appState.currentIngredients.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl bg-slate-950/40">
+                        <i class="fa-regular fa-folder-open text-2xl mb-2 block"></i>
+                        พิมพ์ชื่อเมนูแล้วกด "แยกวัตถุดิบ" หรือเลือกวัตถุดิบใส่จานด่วนด้านบนเพื่อเริ่มใส่สูตรค่ะคุณปอนด์
+                    </div>
+                `;
+                calculateBuilderTotals();
+                return;
+            }
+
+            container.innerHTML = '';
+            appState.currentIngredients.forEach((ing, index) => {
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-1 md:grid-cols-12 gap-2 items-center bg-slate-950 p-3 rounded-xl border border-slate-800 relative';
+                
+                row.innerHTML = `
+                    <div class="md:col-span-4">
+                        <label class="block text-[9px] text-slate-500 mb-0.5 md:hidden">ชื่อวัตถุดิบ</label>
+                        <input type="text" value="${ing.name}" oninput="updateWorkspaceField(${index}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs rounded p-1.5 text-white focus:outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[9px] text-slate-500 mb-0.5 md:hidden">น้ำหนัก</label>
+                        <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded p-1">
+                            <input type="number" value="${ing.weight}" oninput="updateWorkspaceWeight(${index}, this.value)" class="w-full bg-transparent text-xs text-center text-emerald-400 font-bold focus:outline-none">
+                            <span class="text-[10px] text-slate-500 pr-1">${getUnitForIngredient(ing.baseId)}</span>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[9px] text-slate-500 mb-0.5 md:hidden">แคลอรี่ (kcal)</label>
+                        <input type="number" value="${ing.kcal}" oninput="updateWorkspaceField(${index}, 'kcal', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-emerald-400 font-bold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-[9px] text-slate-500 mb-0.5 md:hidden">โปรตีน (g)</label>
+                        <input type="number" step="0.1" value="${ing.protein}" oninput="updateWorkspaceField(${index}, 'protein', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-rose-400 font-semibold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-[9px] text-slate-500 mb-0.5 md:hidden">คาร์บ (g)</label>
+                        <input type="number" step="0.1" value="${ing.carbs}" oninput="updateWorkspaceField(${index}, 'carbs', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-amber-400 font-semibold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="block text-[9px] text-slate-500 mb-0.5 md:hidden">ไขมัน (g)</label>
+                        <input type="number" step="0.1" value="${ing.fat}" oninput="updateWorkspaceField(${index}, 'fat', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-blue-400 font-semibold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1 flex justify-center">
+                        <button type="button" onclick="deleteWorkspaceIngredient(${index})" class="text-slate-500 hover:text-rose-400 transition-colors text-sm p-1">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            calculateBuilderTotals();
+        }
+
+        // Updates dynamic macro output scale relative to user changed weights
+        function updateWorkspaceWeight(index, val) {
+            const weight = parseFloat(val) || 0;
+            const ing = appState.currentIngredients[index];
+            ing.weight = weight;
+
+            const db = getIngredientDb();
+            const base = db[ing.baseId];
+            if (base) {
+                const ratio = weight / base.baseWeight;
+                ing.kcal = Math.round(base.kcal * ratio);
+                ing.protein = Math.round((base.protein * ratio) * 10) / 10;
+                ing.carbs = Math.round((base.carbs * ratio) * 10) / 10;
+                ing.fat = Math.round((base.fat * ratio) * 10) / 10;
+            }
+
+            // Sync values to the row inputs directly to preserve cursor input focus
+            const list = document.getElementById('ingredients-editor-list');
+            const row = list.children[index];
+            if (row) {
+                const inputs = row.querySelectorAll('input');
+                if (inputs.length >= 6) {
+                    inputs[2].value = ing.kcal;
+                    inputs[3].value = ing.protein;
+                    inputs[4].value = ing.carbs;
+                    inputs[5].value = ing.fat;
+                }
+            }
+
+            calculateBuilderTotals();
+        }
+
+        // Custom individual workspace fields editing
+        function updateWorkspaceField(index, field, val) {
+            const ing = appState.currentIngredients[index];
+            if (field === 'name') {
+                ing.name = val;
+            } else {
+                ing[field] = parseFloat(val) || 0;
+            }
+            calculateBuilderTotals();
+        }
+
+        // Remove single item inside builder
+        function deleteWorkspaceIngredient(index) {
+            appState.currentIngredients.splice(index, 1);
+            renderActiveWorkspace();
+        }
+
+        // Sums builder workspace total nutrition value
+        function calculateBuilderTotals() {
+            let kcal = 0;
+            let p = 0;
+            let c = 0;
+            let f = 0;
+
+            appState.currentIngredients.forEach(ing => {
+                kcal += ing.kcal || 0;
+                p += ing.protein || 0;
+                c += ing.carbs || 0;
+                f += ing.fat || 0;
+            });
+
+            p = Math.round(p * 10) / 10;
+            c = Math.round(c * 10) / 10;
+            f = Math.round(f * 10) / 10;
+
+            document.getElementById('builder-total-kcal').innerHTML = `${kcal} <span class="text-xs font-medium text-slate-500">kcal</span>`;
+            document.getElementById('builder-total-protein').innerText = `${p}g`;
+            document.getElementById('builder-total-carbs').innerText = `${c}g`;
+            document.getElementById('builder-total-fat').innerText = `${f}g`;
+        }
+
+        // Commits current builder workspace meal logs into permanent calendar storage
+        function commitMealToLog() {
+            const inputName = document.getElementById('food-input-name').value.trim();
+            const mealName = inputName || "เมนูอาหารไม่มีชื่อ";
+
+            if (appState.currentIngredients.length === 0) {
+                showToast("กรุณาเพิ่มวัตถุดิบลงในตารางก่อนบันทึกนะคะ", "warning");
+                return;
+            }
+
+            let kcal = 0;
+            let p = 0;
+            let c = 0;
+            let f = 0;
+
+            appState.currentIngredients.forEach(ing => {
+                kcal += ing.kcal || 0;
+                p += ing.protein || 0;
+                c += ing.carbs || 0;
+                f += ing.fat || 0;
+            });
+
+            p = Math.round(p * 10) / 10;
+            c = Math.round(c * 10) / 10;
+            f = Math.round(f * 10) / 10;
+
+            const log = {
+                id: Date.now(),
+                name: mealName,
+                totalKcal: kcal,
+                totalP: p,
+                totalC: c,
+                totalF: f,
+                date: activeSelectedDate,
+                ingredients: [...appState.currentIngredients]
+            };
+
+            appState.logs.push(log);
+            appState.currentIngredients = [];
+            document.getElementById('food-input-name').value = '';
+
+            saveState();
+            renderActiveWorkspace();
+            renderLogsList();
+            updateDashboard();
+            showToast(`บันทึกเมนู "${mealName}" ลงประวัติสำเร็จแล้วค่ะ!`);
+        }
+
+        // Renders logged list view for activeSelectedDate
+        function renderLogsList() {
+            const container = document.getElementById('logged-meals-container');
+            const dailyLogs = appState.logs.filter(log => log.date === activeSelectedDate);
+
+            if (dailyLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl bg-slate-950/20">
+                        <i class="fa-solid fa-cookie-bite text-2xl mb-2.5 block text-slate-700"></i>
+                        ยังไม่มีรายการทานบันทึกไว้ในวันที่เลือกค่ะคุณปอนด์
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            dailyLogs.forEach(log => {
+                const realIndex = appState.logs.findIndex(l => l.id === log.id);
+                const card = document.createElement('div');
+                card.className = 'bg-slate-950 border border-slate-800/80 rounded-xl p-4 hover:border-slate-700 transition-all shadow';
+                
+                // Build dynamic ingredient labels
+                const ingredientChips = log.ingredients && log.ingredients.length > 0 
+                    ? log.ingredients.map(ing => `<span class="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-400 font-medium inline-block mr-1.5 mb-1.5">${ing.name} (${ing.weight} ${getUnitForIngredient(ing.baseId)})</span>`).join('')
+                    : '<span class="text-[10px] text-slate-600">ไม่มีข้อมูลวัตถุดิบละเอียด</span>';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-4">
+                        <div>
+                            <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                ${log.name}
+                            </h4>
+                            <div class="flex gap-3 text-xs mt-1.5 font-medium">
+                                <span class="text-emerald-400 font-semibold">${log.totalKcal} kcal</span>
+                                <span class="text-slate-500">•</span>
+                                <span class="text-rose-400">P ${log.totalP}g</span>
+                                <span class="text-slate-500">•</span>
+                                <span class="text-amber-400">C ${log.totalC}g</span>
+                                <span class="text-slate-500">•</span>
+                                <span class="text-blue-400">F ${log.totalF}g</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-1">
+                            <button onclick="openEditModal(${realIndex})" class="p-1.5 text-slate-500 hover:text-emerald-400 hover:bg-slate-900 rounded-lg transition-all text-xs" title="แก้ไขข้อมูล">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="triggerDeleteMeal(${realIndex})" class="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-900 rounded-lg transition-all text-xs" title="ลบมื้ออาหาร">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-900 flex flex-wrap items-center">
+                        <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mr-2 mb-1.5"><i class="fa-solid fa-list text-[8px] text-indigo-400 mr-1"></i> ส่วนประกอบ:</span>
+                        <div class="flex-1">
+                            ${ingredientChips}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Trigger individual meal removal confirmation
+        function triggerDeleteMeal(index) {
+            const logName = appState.logs[index].name;
+            showConfirmModal(`คุณปอนด์ต้องการลบมื้ออาหาร "${logName}" ออกจากวันนี้นะคะ?`, () => {
+                appState.logs.splice(index, 1);
+                saveState();
+                renderLogsList();
+                updateDashboard();
+                showToast(`ลบรายการ "${logName}" สำเร็จค่ะ`);
+            });
+        }
+
+        // Global Daily Logs clear trigger
+        function triggerClearAllLogs() {
+            const targetLogs = appState.logs.filter(log => log.date === activeSelectedDate);
+            if (targetLogs.length === 0) {
+                showToast("ไม่มีรายการอาหารในวันนี้ให้ล้างข้อมูลค่ะคุณปอนด์", "info");
+                return;
+            }
+
+            showConfirmModal(`ยืนยันการล้างประวัติการทานของวันที่ ${activeSelectedDate} ทั้งหมดใช่ไหมคะ?`, () => {
+                appState.logs = appState.logs.filter(log => log.date !== activeSelectedDate);
+                saveState();
+                renderLogsList();
+                updateDashboard();
+                showToast("ล้างประวัติวันนี้ทั้งหมดสำเร็จค่ะ!");
+            });
+        }
+
+        // Confirmation Modal Interface Logic
+        let confirmSuccessCallback = null;
+        function showConfirmModal(message, onSuccess) {
+            const modal = document.getElementById('confirm-modal');
+            const body = document.getElementById('confirm-modal-body');
+            body.innerText = message;
+            confirmSuccessCallback = onSuccess;
+            modal.classList.remove('hidden');
+        }
+
+        // Bind Confirmation elements click
+        document.getElementById('confirm-cancel-btn').onclick = function() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            confirmSuccessCallback = null;
+        };
+        document.getElementById('confirm-success-btn').onclick = function() {
+            if (confirmSuccessCallback) confirmSuccessCallback();
+            document.getElementById('confirm-modal').classList.add('hidden');
+            confirmSuccessCallback = null;
+        };
+
+        // --- Edit Log Entry Dialog Modal logic ---
+        let modalIngredients = [];
+
+        function openEditModal(realIdx) {
+            const log = appState.logs[realIdx];
+            if (!log) return;
+
+            document.getElementById('edit-meal-index').value = realIdx;
+            document.getElementById('edit-meal-name').value = log.name;
+
+            // Clone to temporary workspace array
+            modalIngredients = log.ingredients ? JSON.parse(JSON.stringify(log.ingredients)) : [];
+            
+            renderModalIngredients();
+            document.getElementById('edit-meal-modal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-meal-modal').classList.add('hidden');
+        }
+
+        function renderModalIngredients() {
+            const container = document.getElementById('modal-ingredients-list');
+            container.innerHTML = '';
+
+            if (modalIngredients.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl bg-slate-950/40">
+                        ไม่มีส่วนประกอบเหลืออยู่ กดปุ่มเพิ่มด้านบนเพื่อเติมได้ค่ะ
+                    </div>
+                `;
+                calculateModalTotals();
+                return;
+            }
+
+            modalIngredients.forEach((ing, index) => {
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-1 md:grid-cols-12 gap-2 items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800 relative';
+                
+                row.innerHTML = `
+                    <div class="md:col-span-4">
+                        <input type="text" value="${ing.name}" oninput="updateModalField(${index}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs rounded p-1.5 text-white focus:outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded p-1">
+                            <input type="number" value="${ing.weight}" oninput="updateModalWeight(${index}, this.value)" class="w-full bg-transparent text-xs text-center text-emerald-400 font-bold focus:outline-none">
+                            <span class="text-[10px] text-slate-500 pr-1">${getUnitForIngredient(ing.baseId)}</span>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <input type="number" value="${ing.kcal}" oninput="updateModalField(${index}, 'kcal', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-emerald-400 font-bold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1">
+                        <input type="number" step="0.1" value="${ing.protein}" oninput="updateModalField(${index}, 'protein', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-rose-400 font-semibold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1">
+                        <input type="number" step="0.1" value="${ing.carbs}" oninput="updateModalField(${index}, 'carbs', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-amber-400 font-semibold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1">
+                        <input type="number" step="0.1" value="${ing.fat}" oninput="updateModalField(${index}, 'fat', this.value)" class="w-full bg-slate-900 border border-slate-800 text-xs text-center text-blue-400 font-semibold rounded p-1.5 focus:outline-none">
+                    </div>
+                    <div class="md:col-span-1 flex justify-center">
+                        <button type="button" onclick="deleteModalIngredient(${index})" class="text-slate-500 hover:text-rose-400 transition-colors text-xs p-1">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            calculateModalTotals();
+        }
+
+        function updateModalWeight(index, val) {
+            const weight = parseFloat(val) || 0;
+            const ing = modalIngredients[index];
+            ing.weight = weight;
+
+            const db = getIngredientDb();
+            const base = db[ing.baseId];
+            if (base) {
+                const ratio = weight / base.baseWeight;
+                ing.kcal = Math.round(base.kcal * ratio);
+                ing.protein = Math.round((base.protein * ratio) * 10) / 10;
+                ing.carbs = Math.round((base.carbs * ratio) * 10) / 10;
+                ing.fat = Math.round((base.fat * ratio) * 10) / 10;
+            }
+
+            // Sync values to DOM inputs
+            const list = document.getElementById('modal-ingredients-list');
+            const row = list.children[index];
+            if (row) {
+                const inputs = row.querySelectorAll('input');
+                if (inputs.length >= 6) {
+                    inputs[2].value = ing.kcal;
+                    inputs[3].value = ing.protein;
+                    inputs[4].value = ing.carbs;
+                    inputs[5].value = ing.fat;
+                }
+            }
+
+            calculateModalTotals();
+        }
+
+        function updateModalField(index, field, val) {
+            const ing = modalIngredients[index];
+            if (field === 'name') {
+                ing.name = val;
+            } else {
+                ing[field] = parseFloat(val) || 0;
+            }
+            calculateModalTotals();
+        }
+
+        function addModalIngredientRow() {
+            modalIngredients.push({
+                name: "วัตถุดิบเสริมสัดส่วน",
+                baseId: "custom",
+                weight: 100,
+                kcal: 0,
+                protein: 0,
+                carbs: 0,
+                fat: 0
+            });
+            renderModalIngredients();
+        }
+
+        function deleteModalIngredient(index) {
+            modalIngredients.splice(index, 1);
+            renderModalIngredients();
+        }
+
+        function calculateModalTotals() {
+            let kcal = 0;
+            modalIngredients.forEach(ing => {
+                kcal += ing.kcal || 0;
+            });
+            document.getElementById('modal-total-kcal').innerText = `${kcal} kcal`;
+        }
+
+        function saveMealEdit() {
+            const idx = parseInt(document.getElementById('edit-meal-index').value);
+            const log = appState.logs[idx];
+            if (!log) return;
+
+            const updatedName = document.getElementById('edit-meal-name').value.trim();
+            log.name = updatedName || "เมนูอาหารไม่ระบุชื่อ";
+
+            let kcal = 0;
+            let p = 0;
+            let c = 0;
+            let f = 0;
+
+            modalIngredients.forEach(ing => {
+                kcal += ing.kcal || 0;
+                p += ing.protein || 0;
+                c += ing.carbs || 0;
+                f += ing.fat || 0;
+            });
+
+            log.totalKcal = kcal;
+            log.totalP = Math.round(p * 10) / 10;
+            log.totalC = Math.round(c * 10) / 10;
+            log.totalF = Math.round(f * 10) / 10;
+            log.ingredients = [...modalIngredients];
+
+            saveState();
+            closeEditModal();
+            renderLogsList();
+            updateDashboard();
+            showToast("อัปเดตแก้ไขรายการอาหารเรียบร้อยแล้วค่ะคุณปอนด์!");
+        }
+
+        // --- Custom Inventory Stocks Display Section ---
+        function renderCustomStockChips() {
+            const container = document.getElementById('custom-stock-chips');
+            const outerContainer = document.getElementById('custom-stock-list-container');
+            const keys = Object.keys(appState.customRawIngredients || {});
+
+            if (keys.length === 0) {
+                outerContainer.classList.add('hidden');
+                return;
+            }
+
+            outerContainer.classList.remove('hidden');
+            container.innerHTML = '';
+
+            keys.forEach(key => {
+                const ing = appState.customRawIngredients[key];
+                const chip = document.createElement('div');
+                chip.className = 'flex items-center gap-1.5 bg-slate-900 border border-slate-800 text-[11px] text-slate-300 py-1 px-2.5 rounded-full';
+                chip.innerHTML = `
+                    <span>${ing.name} (${ing.kcal} kcal)</span>
+                    <button type="button" onclick="deleteCustomRawIngredient('${key}')" class="text-slate-500 hover:text-rose-400 font-bold ml-1 text-xs">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        function deleteCustomRawIngredient(key) {
+            if (appState.customRawIngredients[key]) {
+                const ingName = appState.customRawIngredients[key].name;
+                delete appState.customRawIngredients[key];
+                saveState();
+                renderRawIngredientsDropdown();
+                renderCustomStockChips();
+                showToast(`ลบ "${ingName}" ออกจากคลังถาวรแล้วค่ะ`);
+            }
+        }
+
+        // --- Core Application Dashboard Updates logic ---
+        function updateDashboard() {
+            const targetKcal = appState.goal || 2000;
+            document.getElementById('goal-calories-val').innerText = targetKcal.toLocaleString();
+
+            const dailyLogs = appState.logs.filter(log => log.date === activeSelectedDate);
+            
+            let totalKcal = 0;
+            let totalP = 0;
+            let totalC = 0;
+            let totalF = 0;
+
+            dailyLogs.forEach(log => {
+                totalKcal += log.totalKcal || 0;
+                totalP += log.totalP || 0;
+                totalC += log.totalC || 0;
+                totalF += log.totalF || 0;
+            });
+
+            totalP = Math.round(totalP * 10) / 10;
+            totalC = Math.round(totalC * 10) / 10;
+            totalF = Math.round(totalF * 10) / 10;
+
+            const remainingKcal = targetKcal - totalKcal;
+            document.getElementById('consumed-calories-val').innerText = totalKcal.toLocaleString();
+
+            const valLabel = document.getElementById('remaining-calories-val');
+            const lblLabel = document.getElementById('remaining-calories-lbl');
+
+            if (remainingKcal >= 0) {
+                valLabel.innerText = remainingKcal.toLocaleString();
+                valLabel.className = "text-3xl font-extrabold text-white";
+                lblLabel.innerText = "kcal คงเหลือ";
+                lblLabel.className = "text-xs text-slate-400 mt-0.5";
+            } else {
+                valLabel.innerText = Math.abs(remainingKcal).toLocaleString();
+                valLabel.className = "text-3xl font-extrabold text-rose-500";
+                lblLabel.innerText = "kcal เกินเป้าหมาย! ⚠️";
+                lblLabel.className = "text-xs text-rose-400 font-semibold mt-0.5";
+            }
+
+            // Calorie progress circle ring calculations
+            const ring = document.getElementById('calorie-progress-ring');
+            if (ring) {
+                const percent = Math.min((totalKcal / targetKcal) * 100, 100);
+                const offset = 502.6 - (percent / 100) * 502.6;
+                ring.style.strokeDashoffset = offset;
+                
+                // Color shifting code
+                if (totalKcal > targetKcal) {
+                    ring.setAttribute('stroke', '#f43f5e'); // rose-500
+                } else if (totalKcal >= targetKcal * 0.9) {
+                    ring.setAttribute('stroke', '#f59e0b'); // amber-500
+                } else {
+                    ring.setAttribute('stroke', '#10b981'); // emerald-500
+                }
+            }
+
+            // Macros goal level progress calculation
+            // ยึดเป้าหมายโปรตีนวันละ 80 กรัมตามเป้าหมายคอร์สคุณปอนด์
+            const targetP = 80;
+            const targetC = 180;
+            const targetF = 50;
+
+            const pPercent = Math.min((totalP / targetP) * 100, 100);
+            document.getElementById('protein-progress-text').innerText = `${totalP}g / ${targetP}g`;
+            document.getElementById('protein-bar').style.width = `${pPercent}%`;
+
+            const cPercent = Math.min((totalC / targetC) * 100, 100);
+            document.getElementById('carbs-progress-text').innerText = `${totalC}g / ${targetC}g`;
+            document.getElementById('carbs-bar').style.width = `${cPercent}%`;
+
+            const fPercent = Math.min((totalF / targetF) * 100, 100);
+            document.getElementById('fat-progress-text').innerText = `${totalF}g / ${targetF}g`;
+            document.getElementById('fat-bar').style.width = `${fPercent}%`;
+        }
+
+        // Global Day / Target values controls
+        function changeSelectedDate(val) {
+            if (!val) return;
+            activeSelectedDate = val;
+            updateDateLabels();
+            renderLogsList();
+            updateDashboard();
+        }
+
+        function updateDateLabels() {
+            const todayStr = getTodayString();
+            const displayDate = activeSelectedDate === todayStr ? "วันนี้" : activeSelectedDate;
+            
+            document.getElementById('dashboard-date-label').innerText = displayDate;
+            document.getElementById('list-date-label').innerText = displayDate;
+        }
+
+        function getTodayString() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateDailyGoal(val) {
+            const goal = parseInt(val) || 2000;
+            appState.goal = goal;
+            saveState();
+            updateDashboard();
+            showToast(`ปรับเป้าหมายพลังงานแคลอรี่เป็น ${goal} kcal แล้วค่ะ!`);
+        }
+
+        // Toast Messages alert interface
+        let toastTimeout = null;
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const icon = toast.querySelector('i');
+
+            toastMsg.innerText = message;
+            
+            if (type === "warning") {
+                icon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
+            } else if (type === "info") {
+                icon.className = "fa-solid fa-circle-info text-blue-400 text-sm";
+            } else {
+                icon.className = "fa-solid fa-circle-check text-emerald-400 text-sm";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
