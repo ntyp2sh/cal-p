@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pond Calorie Tracker Pro - แอปนับแคลอรี่และแยกวัตถุดิบย้อนหลังได้</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Sarabun for Thai readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for modern UI look -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Sarabun', sans-serif;
+        }
+        /* Custom scrollbar for modern sleek styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col">
+
+    <!-- Header Area -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i class="fa-solid fa-fire-flame-curved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white">Pond Calorie Pro</h1>
+                    <p class="text-xs text-slate-400">แอปบันทึกโภชนาการ แยกวัตถุดิบละเอียดและปฏิทินย้อนหลัง</p>
+                </div>
+            </div>
+            
+            <!-- Controls Group: Datepicker & Target Calorie -->
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                <!-- Date Picker Controls -->
+                <div class="flex items-center gap-2 bg-slate-950/80 p-1.5 px-3 rounded-xl border border-slate-800">
+                    <span class="text-xs text-slate-400 font-medium"><i class="fa-solid fa-calendar text-emerald-400 mr-1.5"></i>วันที่ต้องการดู:</span>
+                    <input type="date" id="selected-date-picker" class="bg-transparent text-emerald-400 font-bold focus:outline-none text-xs cursor-pointer" onchange="changeSelectedDate(this.value)">
+                </div>
+
+                <!-- Quick Target Calorie Editor -->
+                <div class="flex items-center gap-2 bg-slate-950/80 p-1.5 px-3 rounded-xl border border-slate-800">
+                    <span class="text-xs text-slate-400 font-medium">เป้าหมาย:</span>
+                    <input type="number" id="global-target-input" class="w-16 bg-transparent text-emerald-400 font-bold focus:outline-none text-center text-xs" value="2000" min="100" max="10000" onchange="updateDailyGoal(this.value)">
+                    <span class="text-xs text-emerald-400 font-semibold">kcal</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto">
+
+        <!-- Left Section: Real-time Dashboard Widgets (4 Cols on desktop) -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- Progress Circle Widget Card -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-chart-pie mr-2"></i>ภาพรวม <span id="dashboard-date-label" class="text-emerald-400">วันนี้</span></h2>
+                
+                <!-- SVG Calorie Ring -->
+                <div class="flex flex-col items-center justify-center my-4 relative">
+                    <svg class="w-48 h-48 transform -rotate-90">
+                        <!-- Background Circle -->
+                        <circle cx="96" cy="96" r="80" stroke="#1e293b" stroke-width="12" fill="transparent" />
+                        <!-- Progress Circle -->
+                        <circle id="calorie-progress-ring" cx="96" cy="96" r="80" stroke="#10b981" stroke-width="12" fill="transparent" 
+                                stroke-dasharray="502.6" stroke-dashoffset="502.6" stroke-linecap="round" class="transition-all duration-500 ease-out" />
+                    </svg>
+                    <!-- Center Calories Text -->
+                    <div class="absolute flex flex-col items-center justify-center text-center">
+                        <span id="remaining-calories-val" class="text-3xl font-extrabold text-white">2,000</span>
+                        <span id="remaining-calories-lbl" class="text-xs text-slate-400 mt-0.5">kcal คงเหลือ</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800/60 mt-2 text-center">
+                    <div>
+                        <span class="text-xs text-slate-400 block mb-0.5">ทานไปแล้ว</span>
+                        <span id="consumed-calories-val" class="text-xl font-bold text-emerald-400">0</span>
+                        <span class="text-xs text-slate-500">kcal</span>
+                    </div>
+                    <div class="border-l border-slate-800/80">
+                        <span class="text-xs text-slate-400 block mb-0.5">เป้าหมายวันคัดเลือก</span>
+                        <span id="goal-calories-val" class="text-xl font-bold text-white">2,000</span>
+                        <span class="text-xs text-slate-500">kcal</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Macros Progress Widget Card -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4"><i class="fa-solid fa-apple-whole mr-2"></i>สารอาหารสามหมู่ (กิโลแคล / กรัม)</h3>
+                
+                <div class="space-y-4">
+                    <!-- Protein -->
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span class="text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-egg"></i> โปรตีน (Protein)</span>
+                            <span class="text-slate-300" id="protein-progress-text">0g / 130g</span>
+                        </div>
+                        <div class="h-2.5 bg-slate-950 rounded-full overflow-hidden">
+                            <div id="protein-bar" class="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Carbs -->
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span class="text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-wheat-awn"></i> คาร์บ (Carbs)</span>
+                            <span class="text-slate-300" id="carbs-progress-text">0g / 240g</span>
+                        </div>
+                        <div class="h-2.5 bg-slate-950 rounded-full overflow-hidden">
+                            <div id="carbs-bar" class="h-full bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Fat -->
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span class="text-blue-400 flex items-center gap-1.5"><i class="fa-solid fa-droplet"></i> ไขมัน (Fat)</span>
+                            <span class="text-slate-300" id="fat-progress-text">0g / 60g</span>
+                        </div>
+                        <div class="h-2.5 bg-slate-950 rounded-full overflow-hidden">
+                            <div id="fat-bar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-xs text-slate-500 text-center">
+                <i class="fa-solid fa-info-circle mr-1"></i> ข้อมูลบันทึกประวัติจะถูกเซฟแยกวันให้คุณปอนออโต้
+            </div>
+        </section>
+
+        <!-- Right/Center Section: Interactive Loggers (8 Cols on desktop) -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+            
+            <!-- Meal Input and Ingredient Editor Box -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus text-emerald-400"></i>
+                    บันทึกเมนูใหม่ & แยกวัตถุดิบประจำวัน
+                </h2>
+
+                <!-- Step 1: Search / Enter Meal Name -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end mb-6">
+                    <div class="md:col-span-8">
+                        <label class="block text-xs font-semibold text-slate-400 mb-2">ชื่อเมนูอาหาร / เครื่องดื่ม</label>
+                        <div class="relative">
+                            <input type="text" id="food-input-name" class="w-full bg-slate-950 text-white rounded-xl py-3 pl-10 pr-4 text-sm border border-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-600" placeholder="ตัวอย่าง: ข้าวมันไก่, แกงเขียวหวาน หรือ ใส่ชื่อเองได้เลย">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-500"></i>
+                        </div>
+                    </div>
+                    <div class="md:col-span-4 flex gap-2">
+                        <button type="button" onclick="loadPresetIngredients()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl py-3 text-xs font-semibold transition-all border border-slate-700/60 flex items-center justify-center gap-1.5 shadow-md">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> แยกวัตถุดิบ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Presets Quick Selection Pills -->
+                <div class="mb-6">
+                    <span class="text-xs text-slate-500 font-medium block mb-2">เลือกเมนูยอดฮิตด่วน:</span>
+                    <div class="flex flex-wrap gap-1.5" id="presets-container">
+                        <!-- Presets dynamically inserted here -->
+                    </div>
+                </div>
+
+                <!-- Fast Raw Ingredients Finder Section -->
+                <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800/80 mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs text-slate-300 font-bold"><i class="fa-solid fa-magnifying-glass text-emerald-400 mr-1"></i> ค้นหาและหยิบวัตถุดิบใส่จานด่วน (กรัม/หน่วย)</span>
+                        <button type="button" onclick="toggleCustomIngredientForm()" class="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors font-semibold">
+                            <i class="fa-solid fa-plus-circle"></i> <span id="custom-ing-toggle-btn-txt">สร้างวัตถุดิบส่วนตัวเพิ่ม</span>
+                        </button>
+                    </div>
+
+                    <!-- Hidden Slide down form to add New Custom Raw Ingredient to inventory database -->
+                    <div id="custom-ing-form" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4 space-y-3 transition-all">
+                        <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-plus text-emerald-400"></i>
+                            ลงทะเบียนวัตถุดิบชิ้นใหม่ลงฐานข้อมูล
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                            <div class="md:col-span-4">
+                                <label class="block text-[10px] text-slate-400 mb-1">ชื่อวัตถุดิบ</label>
+                                <input type="text" id="new-ing-name" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-2 text-white placeholder:text-slate-700" placeholder="ตัวอย่าง: เวย์โปรตีนช็อกโกแลต">
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-[10px] text-slate-400 mb-1">หน่วยนับ</label>
+                                <select id="new-ing-unit" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-2 text-slate-300 focus:outline-none">
+                                    <option value="กรัม">กรัม (grams)</option>
+                                    <option value="ฟอง">ฟอง (egg unit)</option>
+                                    <option value="ชิ้น">ชิ้น (pieces)</option>
+                                    <option value="กล่อง">กล่อง (box)</option>
+                                    <option value="ช้อน">ช้อน (scoop/spoon)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-5">
+                                <label class="block text-[10px] text-slate-400 mb-1">น้ำหนักฐาน / ขนาดสัดส่วน</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="new-ing-base" value="100" min="1" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-2 text-center text-emerald-400 font-bold focus:outline-none">
+                                    <span class="text-xs text-slate-500 shrink-0">ต่อ 1 หน่วยหลัก</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Macro nutrition targets per Base unit size -->
+                        <div class="grid grid-cols-4 gap-2 pt-1">
+                            <div>
+                                <label class="block text-[9px] text-slate-400 mb-0.5">แคลอรี่ (kcal)</label>
+                                <input type="number" id="new-ing-kcal" value="0" min="0" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-1.5 text-center text-emerald-400 font-bold focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] text-slate-400 mb-0.5">โปรตีน (P)</label>
+                                <input type="number" step="0.1" id="new-ing-protein" value="0" min="0" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-1.5 text-center text-rose-400 font-semibold focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] text-slate-400 mb-0.5">คาร์โบไฮเดรต (C)</label>
+                                <input type="number" step="0.1" id="new-ing-carbs" value="0" min="0" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-1.5 text-center text-amber-400 font-semibold focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] text-slate-400 mb-0.5">ไขมัน (F)</label>
+                                <input type="number" step="0.1" id="new-ing-fat" value="0" min="0" class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-1.5 text-center text-blue-400 font-semibold focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 justify-end pt-2">
+                            <button type="button" onclick="toggleCustomIngredientForm()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-slate-300 rounded transition-colors">ยกเลิก</button>
+                            <button type="button" onclick="saveNewCustomRawIngredient()" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-[11px] font-bold text-slate-950 rounded transition-colors flex items-center gap-1">
+                                <i class="fa-solid fa-floppy-disk"></i> บันทึกเข้าคลังถาวร
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                        <div class="md:col-span-6">
+                            <select id="raw-ingredient-select" class="w-full bg-slate-900 border border-slate-800 rounded-lg text-xs py-2 px-3 text-slate-200 focus:outline-none focus:border-slate-700">
+                                <option value="">-- เลือกวัตถุดิบเพื่อนำข้อมูลจริงไปใช้ --</option>
+                                <!-- Injected dynamically -->
+                            </select>
+                        </div>
+                        <div class="md:col-span-3 flex items-center gap-1.5">
+                            <input type="number" id="raw-ingredient-weight" value="100" min="1" class="w-full bg-slate-900 border border-slate-800 rounded-lg text-xs py-2 text-center text-emerald-400 font-bold focus:outline-none" placeholder="ปริมาณ">
+                            <span class="text-xs text-slate-400" id="raw-ingredient-unit-label">กรัม</span>
+                        </div>
+                        <div class="md:col-span-3">
+                            <button type="button" onclick="addRawIngredientToWorkspace()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-plus"></i> เพิ่มเข้าจาน
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Stock List display (small section) -->
+                    <div id="custom-stock-list-container" class="mt-4 pt-3 border-t border-slate-800/60 hidden">
+                        <span class="text-[10px] text-slate-500 font-bold block mb-2 uppercase tracking-wide"><i class="fa-solid fa-boxes-stacked mr-1"></i> วัตถุดิบในคลังที่คุณสร้างเพิ่มเอง:</span>
+                        <div class="flex flex-wrap gap-1.5" id="custom-stock-chips">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Dynamic Ingredient Breakdown Workspace -->
+                <div class="border-t border-slate-800/80 pt-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide"><i class="fa-solid fa-list-check text-indigo-400 mr-1.5"></i> ตารางส่วนผสมวัตถุดิบ (ปรับแต่งแก้ไขได้ตามจริง)</h3>
+                            <p class="text-[10px] text-slate-500 mt-0.5">คุณปอนปรับแก้ไขปริมาณ แคลอรี่ หรือเปลี่ยนชนิดวัตถุดิบได้ทุกฟิลด์ครับ</p>
+                        </div>
+                        <button type="button" onclick="addBlankIngredientRow()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 py-1 px-2.5 rounded-lg transition-all font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i> เพิ่มวัตถุดิบเปล่า
+                        </button>
+                    </div>
+
+                    <!-- Ingredients Grid List -->
+                    <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1 mb-5" id="ingredients-editor-list">
+                        <!-- Raw ingredient rows injected dynamically -->
+                        <div class="text-center py-8 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl bg-slate-950/40">
+                            <i class="fa-regular fa-folder-open text-2xl mb-2 block"></i>
+                            พิมพ์ชื่อเมนูแล้วกด "แยกวัตถุดิบ" หรือเลือกค้นหาวัตถุดิบและกรอกน้ำหนักด้านบนเพื่อใส่สูตรจริงครับ
+                        </div>
+                    </div>
+
+                    <!-- Aggregated Sum of Current Builder -->
+                    <div class="bg-slate-950/80 rounded-xl p-4 border border-slate-800 flex flex-wrap justify-between items-center gap-4">
+                        <div class="flex gap-4">
+                            <div>
+                                <span class="text-[10px] text-slate-500 block">แคลอรี่รวม</span>
+                                <span id="builder-total-kcal" class="text-lg font-bold text-emerald-400">0 <span class="text-xs font-medium text-slate-500">kcal</span></span>
+                            </div>
+                            <div class="border-l border-slate-800 pl-4">
+                                <span class="text-[10px] text-slate-500 block">โปรตีน</span>
+                                <span id="builder-total-protein" class="text-sm font-semibold text-rose-400">0g</span>
+                            </div>
+                            <div class="border-l border-slate-800 pl-4">
+                                <span class="text-[10px] text-slate-500 block">คาร์บ</span>
+                                <span id="builder-total-carbs" class="text-sm font-semibold text-amber-400">0g</span>
+                            </div>
+                            <div class="border-l border-slate-800 pl-4">
+                                <span class="text-[10px] text-slate-500 block">ไขมัน</span>
+                                <span id="builder-total-fat" class="text-sm font-semibold text-blue-400">0g</span>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="commitMealToLog()" id="btn-save-meal" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 px-6 rounded-xl transition-all flex items-center gap-2 text-sm shadow-lg shadow-emerald-500/10">
+                            <i class="fa-solid fa-check"></i> บันทึกลงวันที่เลือก
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Today's Logged Items List -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day text-emerald-400"></i>
+                        ประวัติการทานของวันที่ <span id="list-date-label" class="text-emerald-400">วันนี้</span>
+                    </h2>
+                    <button onclick="triggerClearAllLogs()" class="text-xs text-slate-500 hover:text-rose-400 transition-colors flex items-center gap-1">
+                        <i class="fa-regular fa-trash-can"></i> ล้างข้อมูลวันนี้ทั้งหมด
+                    </button>
+                </div>
+
+                <div class="space-y-3" id="logged-meals-container">
+                    <!-- Daily meals logged appear here -->
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Edit Modal Dialog -->
+    <div id="edit-meal-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-emerald-400"></i>
+                    <h3 class="font-bold text-white text-base">แก้ไขรายการอาหารและวัตถุดิบ</h3>
+                </div>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Scrollable Ingredients editor) -->
+            <div class="p-6 overflow-y-auto space-y-4">
+                <input type="hidden" id="edit-meal-index">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">ชื่อเมนูอาหารหลัก</label>
+                    <input type="text" id="edit-meal-name" class="w-full bg-slate-950 text-white rounded-xl py-2.5 px-4 text-sm border border-slate-800 focus:border-emerald-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">ส่วนผสมของวัตถุดิบ</span>
+                        <button type="button" onclick="addModalIngredientRow()" class="text-[10px] bg-slate-800 hover:bg-slate-700 border border-slate-700 py-1 px-2.5 rounded text-slate-200 transition-all font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i> เพิ่มส่วนผสมเปล่า
+                        </button>
+                    </div>
+
+                    <!-- Scrollable Modal Ingredients Editor Area -->
+                    <div id="modal-ingredients-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                        <!-- Dynamic rows injected -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+                <div class="text-left">
+                    <span class="text-[10px] text-slate-500 block">คำนวณแคลรวมใหม่</span>
+                    <span id="modal-total-kcal" class="text-base font-extrabold text-emerald-400">0 kcal</span>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors">ยกเลิก</button>
+                    <button type="button" onclick="saveMealEdit()" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i> บันทึกที่แก้ไข
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
+            <div class="flex items-center gap-3 text-rose-500">
+                <div class="p-2.5 bg-rose-500/10 rounded-xl border border-rose-500/20">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">ต้องการยืนยันใช่ไหม?</h3>
+            </div>
+            
+            <p id="confirm-modal-body" class="text-xs text-slate-300 leading-relaxed">
+                การลบประวัติหรือล้างข้อมูลนี้จะไม่สามารถย้อนกลับมาได้ คุณปอนแน่ใจแล้วใช่ไหมครับ?
+            </p>
+
+            <div class="flex gap-2 justify-end mt-2">
+                <button type="button" id="confirm-cancel-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors">ยกเลิก</button>
+                <button type="button" id="confirm-success-btn" class="px-5 py-2 bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold rounded-lg transition-all">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification Box -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-slate-800 text-slate-200 px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 flex items-center gap-2.5 text-xs">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+        <span id="toast-message">บันทึกสำเร็จเรียบร้อยแล้ว</span>
+    </div>
+
+    <script>
+        // Preset Dish Database with detailed breakdown of ingredients
+        const PRESETS = {
+            "ข้าวมันไก่ต้ม": {
+                name: "ข้าวมันไก่ต้ม",
+                ingredients: [
+                    { name: "ข้าวหุงมันกึ่งซ้อมมือ", baseId: "rice_chicken", weight: 200, kcal: 320, protein: 5, carbs: 65, fat: 5 },
+                    { name: "เนื้ออกไก่ต้มไร้หนัง", baseId: "chicken_breast_cooked", weight: 120, kcal: 180, protein: 35, carbs: 0, fat: 4 },
+                    { name: "น้ำจิ้มข้าวมันไก่", baseId: "sauce_dipping", weight: 30, kcal: 45, protein: 1, carbs: 8, fat: 1 },
+                    { name: "แตงกวาและน้ำซุปผัก", baseId: "vegetable_mixed", weight: 100, kcal: 25, protein: 1, carbs: 4, fat: 0 }
+                ]
+            },
+            "กะเพราหมูสับไข่ดาว": {
+                name: "กะเพราหมูสับไข่ดาว",
+                ingredients: [
+                    { name: "ข้าวสวยหอมมะลิ", baseId: "rice_white", weight: 150, kcal: 195, protein: 4, carbs: 42, fat: 0.5 },
+                    { name: "เนื้อหมูสับ (ติดมันน้อย)", baseId: "pork_minced", weight: 100, kcal: 240, protein: 18, carbs: 0, fat: 18 },
+                    { name: "ไข่ไก่ (ฟอง)", baseId: "egg", weight: 1, kcal: 70, protein: 6, carbs: 0.5, fat: 5 },
+                    { name: "น้ำมันปรุงอาหารและซอส", baseId: "oil_vegetable", weight: 15, kcal: 130, protein: 0, carbs: 2, fat: 14 }
+                ]
+            },
+            "ผัดซีอิ้วเส้นใหญ่หมู": {
+                name: "ผัดซีอิ้วเส้นใหญ่หมู",
+                ingredients: [
+                    { name: "เส้นใหญ่ดิบ", baseId: "custom", weight: 150, kcal: 260, protein: 3, carbs: 48, fat: 6 },
+                    { name: "เนื้อหมูหมัก", baseId: "pork_minced", weight: 80, kcal: 192, protein: 14, carbs: 0, fat: 14 },
+                    { name: "ไข่และคะน้า", baseId: "egg", weight: 1, kcal: 90, protein: 7, carbs: 4, fat: 6 },
+                    { name: "น้ำมันและเครื่องปรุงรส", baseId: "oil_vegetable", weight: 12, kcal: 106, protein: 0, carbs: 1, fat: 12 }
+                ]
+            },
+            "ส้มตำไทย": {
+                name: "ส้มตำไทย",
+                ingredients: [
+                    { name: "มะละกอสับและแครอท", baseId: "vegetable_mixed", weight: 150, kcal: 45, protein: 1, carbs: 10, fat: 0 },
+                    { name: "ถั่วลิสงคั่วและกุ้งแห้ง", baseId: "custom", weight: 20, kcal: 75, protein: 4, carbs: 3, fat: 5 },
+                    { name: "น้ำตาลปี๊บและเครื่องปรุงรส", baseId: "sugar", weight: 15, kcal: 58, protein: 0, carbs: 15, fat: 0 }
+                ]
+            },
+            "ชานมไข่มุกหวานปกติ": {
+                name: "ชานมไข่มุกหวานปกติ",
+                ingredients: [
+                    { name: "ชานมปรุงสำเร็จพรีเมียม", baseId: "milk_fresh", weight: 200, kcal: 180, protein: 2, carbs: 25, fat: 8 },
+                    { name: "ไข่มุกแป้งเชื่อม", baseId: "custom", weight: 80, kcal: 120, protein: 0, carbs: 30, fat: 0 },
+                    { name: "น้ำเชื่อมและครีมเทียม", baseId: "sugar", weight: 20, kcal: 80, protein: 0, carbs: 12, fat: 4 }
+                ]
+            },
+            "อกไก่ย่างข้าวกล้อง": {
+                name: "อกไก่ย่างข้าวกล้อง",
+                ingredients: [
+                    { name: "ข้าวกล้องอินทรีย์", baseId: "rice_brown", weight: 150, kcal: 165, protein: 3, carbs: 35, fat: 1 },
+                    { name: "อกไก่ดิบ (หมักย่าง)", baseId: "chicken_breast_raw", weight: 150, kcal: 180, protein: 39, carbs: 0, fat: 2.2 },
+                    { name: "ผักลวกและน้ำจิ้มแจ่ว", baseId: "vegetable_mixed", weight: 100, kcal: 40, protein: 1, carbs: 8, fat: 0 }
+                ]
+            }
+        };
+
+        // Real Raw/Base Ingredients Database (per 100g or per 1 Unit)
+        const RAW_INGREDIENTS = {
+            "chicken_breast_raw": { name: "อกไก่ (ดิบ)", unit: "กรัม", kcal: 120, protein: 26, carbs: 0, fat: 1.5, baseWeight: 100 },
+            "chicken_breast_cooked": { name: "อกไก่ (สุก/ต้ม)", unit: "กรัม", kcal: 150, protein: 31, carbs: 0, fat: 2.8, baseWeight: 100 },
+            "pork_minced": { name: "หมูสับ (ติดมันน้อย)", unit: "กรัม", kcal: 240, protein: 18, carbs: 0, fat: 18, baseWeight: 100 },
+            "beef_slice": { name: "เนื้อวัวสไลด์", unit: "กรัม", kcal: 250, protein: 26, carbs: 0, fat: 15, baseWeight: 100 },
+            "egg": { name: "ไข่ไก่ (เบอร์ 2)", unit: "ฟอง", kcal: 70, protein: 6.3, carbs: 0.6, fat: 5, baseWeight: 1 },
+            "meatball_pork": { name: "ลูกชิ้นหมู", unit: "กรัม", kcal: 170, protein: 12, carbs: 8, fat: 10, baseWeight: 100 },
+            "meatball_chicken": { name: "ลูกชิ้นไก่", unit: "กรัม", kcal: 130, protein: 14, carbs: 6, fat: 5, baseWeight: 100 },
+            "rice_white": { name: "ข้าวสวยหอมมะลิ", unit: "กรัม", kcal: 130, protein: 2.7, carbs: 28, fat: 0.3, baseWeight: 100 },
+            "rice_brown": { name: "ข้าวกล้องหุงสุก", unit: "กรัม", kcal: 111, protein: 2.3, carbs: 23, fat: 0.8, baseWeight: 100 },
+            "rice_chicken": { name: "ข้าวหุงมันข้าวมันไก่", unit: "กรัม", kcal: 160, protein: 2.5, carbs: 32, fat: 2.5, baseWeight: 100 },
+            "vegetable_mixed": { name: "ผักใบเขียว / ผักรวม", unit: "กรัม", kcal: 23, protein: 2.2, carbs: 3.8, fat: 0.2, baseWeight: 100 },
+            "oil_vegetable": { name: "น้ำมันพืช (ปรุงอาหาร)", unit: "กรัม", kcal: 884, protein: 0, carbs: 0, fat: 100, baseWeight: 100 },
+            "sugar": { name: "น้ำตาลทราย", unit: "กรัม", kcal: 387, protein: 0, carbs: 100, fat: 0, baseWeight: 100 },
+            "milk_fresh": { name: "นมสดรสจืด", unit: "กรัม", kcal: 60, protein: 3.2, carbs: 4.8, fat: 3.2, baseWeight: 100 },
+            "sauce_dipping": { name: "น้ำจิ้ม / เครื่องปรุงรส", unit: "กรัม", kcal: 150, protein: 3, carbs: 26, fat: 3, baseWeight: 100 }
+        };
+
+        // Application State loaded from LocalStorage
+        let appState = {
+            goal: 2000,
+            logs: [], // Each log is: { id, name, totalKcal, totalP, totalC, totalF, date: 'YYYY-MM-DD', ingredients: [] }
+            currentIngredients: [], // Active workspace state
+            customRawIngredients: {} // Custom inventory built dynamically by user
+        };
+
+        // Tracks selected calendar date state (Default to Local Computer's Today in YYYY-MM-DD)
+        let activeSelectedDate = '';
+
+        // Helper function to resolve the combined raw ingredients database
+        function getIngredientDb() {
+            return { ...RAW_INGREDIENTS, ...(appState.customRawIngredients || {}) };
+        }
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            setTodayDateDefault();
+            loadStateFromStorage();
+            renderPresets();
+            renderRawIngredientsDropdown();
+            renderActiveWorkspace();
+            renderLogsList();
+            renderCustomStockChips();
+            updateDashboard();
+        };
+
+        // Setup date defaults
+        function setTodayDateDefault() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            activeSelectedDate = `${year}-${month}-${day}`;
+            
+            // Set input value
+            document.getElementById('selected-date-picker').value = activeSelectedDate;
+            updateDateLabels();
+        }
+
+        // Save application state to local storage
+        function saveState() {
+            localStorage.setItem('pond_calorie_state', JSON.stringify(appState));
+        }
+
+        // Load application state from storage with fallbacks
+        function loadStateFromStorage() {
+            const saved = localStorage.getItem('pond_calorie_state');
+            if (saved) {
+                try {
+                    appState = JSON.parse(saved);
+                    if (!appState.logs) appState.logs = [];
+                    if (!appState.currentIngredients) appState.currentIngredients = [];
+                    if (!appState.customRawIngredients) appState.customRawIngredients = {};
+                    if (!appState.goal) appState.goal = 2000;
+                    
+                    document.getElementById('global-target-input').value = appState.goal;
+
+                    // Migration logic to ensure all ingredients possess baseId references
+                    appState.logs.forEach(log => {
+                        if (log.ingredients) {
+                            log.ingredients.forEach(ing => {
+                                if (!ing.baseId) ing.baseId = "custom";
+                                if (ing.weight === undefined) ing.weight = 100;
+                            });
+                        }
+                    });
+                    saveState();
+                } catch (e) {
+                    console.error("Error parsing local state, resetting...", e);
+                }
+            } else {
+                // Seed database with mock data for demonstration purposes
+                appState.logs = [
+                    {
+                        id: 1,
+                        name: "ข้าวมันไก่ตอนเช้า",
+                        totalKcal: 525,
+                        totalP: 41,
+                        totalC: 69,
+                        totalF: 9,
+                        date: activeSelectedDate,
+                        ingredients: [
+                            { name: "ข้าวหุงมันข้าวมันไก่", baseId: "rice_chicken", weight: 200, kcal: 320, protein: 5, carbs: 65, fat: 5 },
+                            { name: "เนื้ออกไก่ต้มไร้หนัง", baseId: "chicken_breast_cooked", weight: 120, kcal: 180, protein: 35, carbs: 0, fat: 4 },
+                            { name: "แตงกวาและน้ำซุปผัก", baseId: "vegetable_mixed", weight: 100, kcal: 25, protein: 1, carbs: 4, fat: 0 }
+                        ]
+                    }
+                ];
+                saveState();
+            }
+        }
+
+        // Populates Raw Ingredients select dropdown from Database
+        function renderRawIngredientsDropdown() {
+            const dropdown = document.getElementById('raw-ingredient-select');
+            
+            // Reset dropdown but keep default instruction
+            dropdown.innerHTML = '<option value="">-- ค้นหา/เลือกวัตถุดิบจริงเพื่อดึงค่าแคล --</option>';
+            
+            const db = getIngredientDb();
+            Object.keys(db).forEach(key => {
+                const ing = db[key];
+                const opt = document.createElement('option');
+                opt.value = key;
+                // Add a prefix flag icon if it is a personal customized stock item
+                const prefix = appState.customRawIngredients && appState.customRawIngredients[key] ? '⭐ [คลังคุณปอน] ' : '';
+                opt.innerText = `${prefix}${ing.name} (${ing.kcal} kcal ต่อ ${ing.baseWeight}${ing.unit})`;
+                dropdown.appendChild(opt);
+            });
+
+            // Bind update unit event on select change
+            dropdown.onchange = function() {
+                const selectedKey = this.value;
+                const unitLabel = document.getElementById('raw-ingredient-unit-label');
+                const weightInput = document.getElementById('raw-ingredient-weight');
+                
+                if (selectedKey && db[selectedKey]) {
+                    const unit = db[selectedKey].unit;
+                    unitLabel.innerText = unit;
+                    weightInput.value = db[selectedKey].baseWeight;
+                } else {
+                    unitLabel.innerText = "กรัม";
+                }
+            };
+        }
+
+        // Toggles display panel of Custom Raw Ingredient Creator form
+        function toggleCustomIngredientForm() {
+            const form = document.getElementById('custom-ing-form');
+            const toggleText = document.getElementById('custom-ing-toggle-btn-txt');
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                toggleText.innerText = "✖ ปิดแถบเพิ่มวัตถุดิบ";
+            } else {
+                form.classList.add('hidden');
+                toggleText.innerText = "➕ สร้างวัตถุดิบส่วนตัวเพิ่ม";
+            }
+        }
+
+        // Saves user custom ingredient into local DB permanently
+        function saveNewCustomRawIngredient() {
+            const name = document.getElementById('new-ing-name').value.trim();
+            const unit = document.getElementById('new-ing-unit').value;
+            const baseWeight = parseFloat(document.getElementById('new-ing-base').value);
+            const kcal = Math.round(parseFloat(document.getElementById('new-ing-kcal').value)) || 0;
+            const protein = parseFloat(document.getElementById('new-ing-protein').value
